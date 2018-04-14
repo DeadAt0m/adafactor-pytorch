@@ -7,9 +7,8 @@ from math import sqrt
 
 class AdaFactor(torch.optim.Optimizer):
     def __init__(self, params, lr=None, beta1=0.9, beta2=0.999, eps1=1e-30, 
-                 eps2=1e-3, cliping_threshold=1, relative_step_size=None,
-                 non_constant_decay = True, enable_factorization=True,
-                 weight_decay=0):
+                 eps2=1e-3, cliping_threshold=1, non_constant_decay = True,
+                 enable_factorization=True, eight_decay=0):
         enable_momentum =  False
         ams_grad = True
         self.beta1_glob = copy(beta1)
@@ -51,7 +50,6 @@ class AdaFactor(torch.optim.Optimizer):
         defaults = dict(lr=lr, beta1=beta1, beta2=beta2, eps1=eps1,
                          eps2=eps2, cliping_threshold=cliping_threshold,                                                           weight_decay=weight_decay,ams_grad=ams_grad,
                         enable_factorization=enable_factorization,
-                        relative_step_size=relative_step_size,
                         enable_momentum=enable_momentum)
         
         super(AdaFactor, self).__init__(params, defaults)
