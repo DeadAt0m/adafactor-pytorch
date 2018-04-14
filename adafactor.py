@@ -117,17 +117,17 @@ class AdaFactor(torch.optim.Optimizer):
                 if len(state) == 0:
                     state['step'] = 0
                     if group['enable_momentum']:
-                        state['exp_avg'] = torch.zeros(new_shape).cuda(cuda_id) if cuda_id >= 0 else  torch.zeros(new_shape)
+                        state['exp_avg'] = torch.zeros_like(grad)
                                            
                        
                     if flag1 and group['enable_factorization']:
                         state['exp_avg_sq_R'] = torch.zeros((1,new_shape[1])).cuda(cuda_id) if cuda_id >= 0 else torch.zeros((1,new_shape[1]))
                         state['exp_avg_sq_C'] = torch.zeros((new_shape[0],1)).cuda(cuda_id) if cuda_id >= 0 else torch.zeros((1,new_shape[1]))
                     else:
-                        state['exp_avg_sq'] = torch.zeros(new_shape).cuda(cuda_id) if cuda_id >= 0 else torch.zeros(new_shape)
-                    
+                        state['exp_avg_sq'] =  torch.zeros_like(grad)
+                        
                     if group['ams_grad']:
-                        state['exp_avg_sq_hat'] = torch.zeros(new_shape).cuda(cuda_id) if cuda_id >= 0 else torch.zeros(new_shape)
+                        state['exp_avg_sq_hat'] =  torch.zeros_like(grad)
                     
                 
                 if group['enable_momentum']:
