@@ -1,14 +1,13 @@
 import torch
-import torch.nn as nn
 import operator
 import functools
 from copy import copy
 from math import sqrt
-
+#lambda,cuda
 class AdaFactor(torch.optim.Optimizer):
     def __init__(self, params, lr=None, beta1=0.9, beta2=0.999, eps1=1e-30, 
-                 eps2=1e-3, cliping_threshold=1, non_constant_decay = True,
-                 enable_factorization=True, eight_decay=0):
+                 eps2=1e-3, cliping_threshold=1,non_constant_decay = True,
+                 enable_factorization=True,  weight_decay=0):
         enable_momentum =  False
         ams_grad = True
         self.beta1_glob = copy(beta1)
@@ -48,9 +47,9 @@ class AdaFactor(torch.optim.Optimizer):
             lr=lambda x: self.lr_glob
                          
         defaults = dict(lr=lr, beta1=beta1, beta2=beta2, eps1=eps1,
-                         eps2=eps2, cliping_threshold=cliping_threshold,                                                           weight_decay=weight_decay,ams_grad=ams_grad,
+                        eps2=eps2, cliping_threshold=cliping_threshold,                                                                                 weight_decay=weight_decay,ams_grad=ams_grad,
                         enable_factorization=enable_factorization,
-                        enable_momentum=enable_momentum)
+                        enable_momentum=enable_momentum,relative_step_size=relative_step_size)
         
         super(AdaFactor, self).__init__(params, defaults)
 
@@ -96,10 +95,7 @@ class AdaFactor(torch.optim.Optimizer):
                 if p.grad is None:
                     continue
                 grad = p.grad.data
-                cuda_id = -1
-                if grad.is_cuda:
-                    cuda_id = grad.get_device()
-                    
+
                     
                 if grad.is_sparse:
                     raise RuntimeError('Adam does not support sparse gradients, please consider SparseAdam instead') 
@@ -115,17 +111,16 @@ class AdaFactor(torch.optim.Optimizer):
                 if len(state) == 0:
                     state['step'] = 0
                     if group['enable_momentum']:
-                        state['exp_avg'] = torch.zeros_like(grad)
+                        state['exp_avg'] = torch.zeros(new_shape, dtype=torch.float32, device=p.grad.device)
                                            
                        
                     if flag1 and group['enable_factorization']:
-                        state['exp_avg_sq_R'] = torch.zeros((1,new_shape[1])).cuda(cuda_id) if cuda_id >= 0 else torch.zeros((1,new_shape[1]))
-                        state['exp_avg_sq_C'] = torch.zeros((new_shape[0],1)).cuda(cuda_id) if cuda_id >= 0 else torch.zeros((1,new_shape[1]))
+                        state['exp_avg_sq_R'] = torch.zeros((1,new_shape[1]), dtype=torch.float32, device=p.grad.device)
+                        state['exp_avg_sq_C'] = torch.zeros((new_shape[0],1), dtype=torch.float32, device=p.grad.device)
                     else:
-                        state['exp_avg_sq'] =  torch.zeros_like(grad)
-                        
+                        state['exp_avg_sq'] = torch.zeros(new_shape, dtype=torch.float32, device=p.grad.device)
                     if group['ams_grad']:
-                        state['exp_avg_sq_hat'] =  torch.zeros_like(grad)
+                        state['exp_avg_sq_hat'] = torch.zeros(new_shape, dtype=torch.float32, device=p.grad.device)
                     
                 
                 if group['enable_momentum']:
