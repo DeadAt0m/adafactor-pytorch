@@ -157,12 +157,12 @@ class AdaFactor(torch.optim.Optimizer):
                     u = torch.div(g,(torch.div(v,1 - beta2_t ** state['step'])).sqrt().add_(group['eps1']))
                 else:
                     u = torch.div(g,v.sqrt()) 
+                
+                if group['weight_decay'] != 0:
+                    p.data.add_(-group['weight_decay'] * lr_t, p.data)
                     
                 u.div_(max(1,self._rms(u) / group['cliping_threshold']))
                 p.data.add_(-lr_t * (u.view(old_shape) if is_need_reshape and group['enable_factorization'] else u))
-            
- 
-                if group['weight_decay'] != 0:
-                    p.data.add_(-group['weight_decay'] * lr_t, p.data)
+  
                     
         return loss
